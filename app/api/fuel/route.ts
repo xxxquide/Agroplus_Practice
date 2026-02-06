@@ -13,7 +13,7 @@ type MemoryFuelCache = {
 export async function GET() {
   const globalCache = globalThis as unknown as { fuelCache?: MemoryFuelCache };
   let fuel: { priceUahPerL: number; updatedAt: Date } | null = null;
-  let historyRows: { priceUahPerL: number }[] = [];
+  let historyRows: Array<{ priceUahPerL: number }> = [];
 
   try {
     fuel = await prisma.fuelPrice.findFirst({ where: { fuelType: "Diesel" } });
@@ -49,7 +49,7 @@ export async function GET() {
   const history = historyRows
     .slice()
     .reverse()
-    .map((item) => item.priceUahPerL);
+    .map((item: { priceUahPerL: number }) => item.priceUahPerL);
   const payload = {
     price: fuel.priceUahPerL,
     updatedAt: fuel.updatedAt,
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
     history: history
       .slice()
       .reverse()
-      .map((item) => item.priceUahPerL)
+      .map((item: { priceUahPerL: number }) => item.priceUahPerL)
   };
 
   const globalCache = globalThis as unknown as { fuelCache?: MemoryFuelCache };
