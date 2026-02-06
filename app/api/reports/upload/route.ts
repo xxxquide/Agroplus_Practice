@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         importResult.machinery.length ||
         importResult.inventory.length
       ) {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: typeof prisma) => {
           for (const row of importResult.fields) {
             await tx.field.upsert({
               where: { code: row.code },
