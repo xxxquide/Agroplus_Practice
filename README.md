@@ -1,30 +1,46 @@
 # AgroPlus Portal
 
-Операційний веб-портал для агропідприємства: поля, склад, техніка, звіти, користувачі, підтримка та сповіщення в єдиній системі.
+> Мій внутрішній операційний портал для агробізнесу. Тут я зібрав повний контур роботи: поля, склад, техніку, звіти, користувачів, підтримку і сповіщення.
 
-## Призначення
+## Зміст
 
-Проєкт закриває щоденні операційні сценарії команди:
-- контроль стану полів і задач по них;
-- контроль запасів і руху складу;
-- завантаження та обробка звітів (`PDF`/`XLSX`);
-- керування користувачами та доступами;
-- внутрішня підтримка через тікети й вкладення;
-- централізовані сповіщення про ключові події.
+- [Візія проєкту](#візія-проєкту)
+- [Модулі системи](#модулі-системи)
+- [Архітектура](#архітектура)
+- [Потік завантаження звіту](#потік-завантаження-звіту)
+- [Карта сторінок](#карта-сторінок)
+- [Технологічний стек](#технологічний-стек)
+- [Мій локальний запуск](#мій-локальний-запуск)
+- [Мій процес міграцій і деплою](#мій-процес-міграцій-і-деплою)
+- [Доступ через OpenVPN](#доступ-через-openvpn)
+- [Структура проєкту](#структура-проєкту)
+- [Скрипти](#скрипти)
+- [Безпека](#безпека)
+
+## Візія проєкту
+
+Цей проєкт я побудував як єдину робочу систему для операційної команди.
+
+- Поля: карта, геометрія, задачі, статуси.
+- Склад: облік, списання, історія руху.
+- Звіти: upload `PDF/XLSX`, імпорт даних, прив'язка до користувача.
+- Користувачі: ролі, активність, профіль і налаштування.
+- Підтримка: тікети, пріоритети, вкладення.
+- Сповіщення: системні події в реальному робочому потоці.
 
 ## Модулі системи
 
-| Модуль | Що робить | Ключові дані |
+| Модуль | Як працює | Сутності |
 |---|---|---|
-| `Dashboard` | Оперативна панель з KPI, погодою, паливом, валютами, прогнозами | `YieldForecast`, `Machinery`, `Notification`, кеш погоди/курсів |
-| `Fields` | Інтерактивна карта, додавання/редагування полів, задачі | `Field`, `FieldTask` |
-| `Warehouse` | Облік позицій складу, списання, історія | `InventoryItem`, `InventoryLog` |
-| `Reports` | Завантаження файлів, парсинг XLSX, привʼязка до користувача | `Report`, Supabase Storage |
-| `Users` | Управління ролями, активністю, профілем | `User` |
-| `Support` | Тікети, пріоритети, вкладення, статуси | `SupportTicket`, `SupportAttachment` |
-| `Profile/Settings` | Персональні налаштування і робочі параметри | `User.profileData`, `User.settingsData` |
+| `Dashboard` | KPI, погода, паливо, курси, прогнози | `YieldForecast`, `Machinery`, `Notification` |
+| `Fields` | Інтерактивна карта та задачі по полях | `Field`, `FieldTask` |
+| `Warehouse` | Складські позиції, історія, списання | `InventoryItem`, `InventoryLog` |
+| `Reports` | Завантаження, парсинг XLSX, зберігання файлів | `Report`, Supabase Storage |
+| `Users` | Користувачі, ролі, активність | `User` |
+| `Support` | Тікети, пріоритети, вкладення | `SupportTicket`, `SupportAttachment` |
+| `Profile / Settings` | Персональні параметри користувача | `User.profileData`, `User.settingsData` |
 
-## Архітектура (система)
+## Архітектура
 
 ```mermaid
 flowchart TB
@@ -48,7 +64,7 @@ flowchart TB
   subgraph D["Дані та інтеграції"]
     PG["Supabase PostgreSQL"]
     ST["Supabase Storage"]
-    EXT["Weather/Rates providers"]
+    EXT["Weather / Rates providers"]
     PRISMA --> PG
     API --> ST
     API --> EXT
@@ -76,7 +92,7 @@ sequenceDiagram
   AUTH-->>API: userId/role
   API->>ST: Upload файлу в bucket
   ST-->>API: storage path
-  API->>DB: create Report + parsed data (для XLSX)
+  API->>DB: create Report + parsed data для XLSX
   DB-->>API: report id
   API->>N: create notification
   API-->>FE: 201 Created
@@ -96,61 +112,55 @@ flowchart LR
   DASH --> SETTINGS["/settings"]
 ```
 
-## Технології
+## Технологічний стек
 
-- `Next.js 15` (`App Router`)
-- `React 19`
-- `Prisma + PostgreSQL (Supabase)`
-- `Supabase Storage`
-- `Tailwind CSS`
-- `MapLibre + Mapbox Draw`
-- `Recharts`
-- `Vitest` + `Playwright`
+| Шар | Технології |
+|---|---|
+| UI | `Next.js 15`, `React 19`, `Tailwind CSS`, `MapLibre`, `Recharts` |
+| Backend | `Next.js Route Handlers`, `Prisma` |
+| Data | `Supabase PostgreSQL`, `Supabase Storage` |
+| QA | `Vitest`, `Playwright` |
 
-## Швидкий старт (локально)
+## Мій локальний запуск
 
-1. Встановити залежності:
+Я використовую такий цикл:
+
+1. Встановлюю залежності.
 ```bash
 pnpm install
 ```
 
-2. Створити `.env`:
+2. Створюю `.env` із шаблону.
 ```bash
 cp .env.example .env
 ```
 
-3. Заповнити змінні:
-- `DATABASE_URL`
-- `DIRECT_URL`
-- `AUTH_SECRET`
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `SUPABASE_STORAGE_BUCKET`
+3. Заповнюю ключові змінні: `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`.
 
-4. Застосувати схему:
+4. Синхронізую схему з БД.
 ```bash
 pnpm db:push
 ```
 
-5. Опційно заповнити демо-дані:
+5. За потреби заливаю демо-дані.
 ```bash
 pnpm db:seed
 ```
 
-6. Запустити проєкт:
+6. Підіймаю застосунок.
 ```bash
 pnpm dev
 ```
 
-## Міграції та деплой (сервер + Supabase)
+## Мій процес міграцій і деплою
 
-Базовий робочий процес:
+1. Локально вношу зміни в `prisma/schema.prisma`.
+2. Створюю міграцію через `prisma migrate dev`.
+3. Комічу `prisma/migrations/*` у GitHub разом із кодом.
+4. На сервері виконую `prisma migrate deploy` перед запуском.
 
-1. Локально розробляєте й створюєте міграцію (`prisma migrate dev`).
-2. Комітите `prisma/migrations/*` у Git.
-3. На сервері виконуєте лише `prisma migrate deploy` перед стартом застосунку.
+Серверний цикл:
 
-Приклад:
 ```bash
 pnpm install --frozen-lockfile
 pnpm prisma migrate deploy
@@ -158,86 +168,122 @@ pnpm build
 pnpm start
 ```
 
-### Важливо для вашого кейсу з IPv4/IPv6
+### IPv4 / IPv6 у моєму сценарії
 
-- `DIRECT_URL` може бути доступний лише через IPv6.
-- Якщо сервер IPv4-only, запускайте міграції з вузла, де є IPv6-доступ (`Mac/CI runner/VPN-вузол`).
-- Продакшн-сервер залишайте на `DATABASE_URL` (pooler), якщо він доступний з цього сервера.
+- `DIRECT_URL` інколи доступний лише по IPv6.
+- Якщо сервер IPv4-only, міграції я запускаю з вузла, де є IPv6.
+- Runtime сервера тримаю на `DATABASE_URL` (pooler), якщо він доступний із сервера.
 
-## Схема деплою (OpenVPN + VPS + Supabase)
+## Доступ через OpenVPN
 
-```mermaid
-flowchart LR
-  USER["Оператор / Адмін"] --> VPN["OpenVPN"]
-  VPN --> VPS["VPS<br/>Next.js (pnpm start)"]
-  VPS --> MW["Middleware<br/>session + VPN_ALLOWLIST"]
-  MW --> API["API Routes"]
-  API --> DB["Supabase PostgreSQL"]
-  API --> ST["Supabase Storage (bucket reports)"]
-  API --> EXT["Зовнішні API (weather/rates)"]
+У мережевому контурі я використовую два рівні захисту:
 
-  GH["GitHub репозиторій"] --> VPS
-```
+- інфраструктурний: `OpenVPN + firewall/security group`;
+- прикладний: `VPN_ALLOWLIST` у middleware.
 
-## Доступ тільки через VPN
+Приклад формату:
 
-У проєкті є middleware-перевірка `VPN_ALLOWLIST`.
-
-Приклад:
 ```env
 VPN_ALLOWLIST="10.8.0.0/24,203.0.113.10/32"
 ```
 
-Рекомендація для production:
-- залишити мережеве обмеження на рівні інфраструктури (`OpenVPN + firewall/security group`);
-- `VPN_ALLOWLIST` тримати як додатковий захисний шар на рівні застосунку.
+## Структура проєкту
+
+### Архітектурна карта директорій
+
+```mermaid
+flowchart LR
+  subgraph UI["UI Layer"]
+    APP["app/* pages"]
+    CMP["components/*"]
+    ICO["icons/*"]
+  end
+
+  subgraph APPLOGIC["Application Layer"]
+    API["app/api/*"]
+    MID["middleware.ts"]
+  end
+
+  subgraph DOMAIN["Domain Layer"]
+    LIB["lib/*"]
+  end
+
+  subgraph DATA["Data Layer"]
+    PRI["prisma/*"]
+    UP["uploads/*"]
+  end
+
+  APP --> CMP
+  APP --> API
+  MID --> API
+  API --> LIB
+  LIB --> PRI
+  API --> UP
+```
+
+### Дерево і роль кожної частини
+
+```text
+.
+├── app/                         # сторінки, layout, route handlers
+│   ├── api/                     # backend endpoints
+│   ├── dashboard/               # оперативна панель
+│   ├── fields/                  # карта полів і задачі
+│   ├── warehouse/               # склад і рух залишків
+│   ├── reports/                 # звіти і upload UI
+│   ├── users/                   # користувачі та ролі
+│   ├── support/                 # тікети підтримки
+│   ├── profile/                 # профіль
+│   └── settings/                # налаштування
+├── components/
+│   ├── ui/                      # універсальні UI-компоненти
+│   └── branding/                # бренд-елементи
+├── icons/                       # іконки проєкту
+├── lib/                         # доменна логіка, auth, db, утиліти
+├── prisma/
+│   ├── schema.prisma            # модель даних
+│   └── seed.ts                  # стартові дані
+├── scripts/                     # технічні скрипти (наприклад, генерація звітів)
+├── tests/
+│   ├── unit/                    # unit тести
+│   └── e2e/                     # end-to-end тести
+├── uploads/                     # локальні завантаження/тестові файли
+├── middleware.ts                # контроль доступу (session + VPN allowlist)
+└── README.md                    # документація проєкту
+```
+
+### Де я додаю новий функціонал
+
+| Що додаю | Куди додаю |
+|---|---|
+| Нова сторінка | `app/<feature>/page.tsx` |
+| Новий API endpoint | `app/api/<feature>/route.ts` |
+| Нова бізнес-логіка | `lib/<feature>.ts` |
+| Нова таблиця / зв’язок | `prisma/schema.prisma` + міграція |
+| Нові UI-примітиви | `components/ui/*` |
+| Новий e2e сценарій | `tests/e2e/*` |
+| Новий unit-тест | `tests/unit/*` |
 
 ## Скрипти
 
-- `pnpm dev` - розробка
+- `pnpm dev` - локальна розробка
 - `pnpm build` - production build
-- `pnpm start` - production server
-- `pnpm lint` - ESLint перевірка
+- `pnpm start` - запуск production
+- `pnpm lint` - перевірка ESLint
 - `pnpm prisma` - Prisma CLI
-- `pnpm db:push` - синхронізація схеми без міграцій (dev)
-- `pnpm db:seed` - початкові дані
+- `pnpm db:push` - синхронізація схеми без міграцій
+- `pnpm db:seed` - початкові демо-дані
 - `pnpm test:unit` - unit-тести
 - `pnpm test:e2e` - e2e-тести
 - `pnpm test` - повний прогін тестів
 
-## Структура проєкту
-
-```text
-app/
-  api/                  HTTP API (reports, fields, users, support, notifications...)
-  dashboard/            Оперативна панель
-  fields/               Інтерактивна карта полів
-  warehouse/            Склад і облік руху
-  reports/              Завантаження і перегляд звітів
-  users/                Управління користувачами
-  support/              Підтримка (тікети + вкладення)
-  profile/ settings/    Профіль і налаштування
-lib/
-  auth*.ts              Авторизація та сесії
-  db.ts                 Prisma client
-  report-import.ts      Імпорт XLSX у доменні дані
-  notifications.ts      Централізоване створення сповіщень
-prisma/
-  schema.prisma         Схема БД
-  seed.ts               Сідер демо-даних
-scripts/
-  generate-sample-reports.js
-tests/
-  unit/ e2e/
-```
-
 ## Безпека
 
-- `.env` не комітити в Git.
-- `SUPABASE_SERVICE_ROLE_KEY` використовувати тільки на сервері.
-- Після підозри на витік - ротація всіх ключів (`DB password`, `service role key`, `AUTH_SECRET`).
+- `.env` не потрапляє в Git.
+- `SUPABASE_SERVICE_ROLE_KEY` використовую тільки на серверній стороні.
+- Після підозри на витік одразу роблю ротацію: `DB password`, `service role key`, `AUTH_SECRET`.
 
-## Демо-доступ (локальне середовище)
+## Демо-доступ (локально)
 
 - Логін: `admin`
 - Пароль: `admin123`
