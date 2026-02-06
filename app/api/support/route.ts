@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import type { SupportPriority } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { createNotification } from "@/lib/notifications";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+
+type SupportPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export async function GET() {
   const user = await requireUser();
