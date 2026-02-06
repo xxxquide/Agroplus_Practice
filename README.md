@@ -96,28 +96,22 @@ flowchart TB
 
 Процес обробки файлів реалізований асинхронно з миттєвим сповіщенням користувача.
 
-```mermaid
 sequenceDiagram
   participant U as Користувач
-  participant FE as Reports UI
-  participant API as POST /api/reports/upload
-  participant AUTH as Session Check
-  participant ST as Supabase Storage
-  participant DB as PostgreSQL (Prisma)
-  participant N as Notifications
+  participant UI as Інтерфейс
+  participant API as API Server
+  participant DB as Local PostgreSQL
+  participant FS as Local Disk
 
-  U->>FE: Обирає PDF/XLSX + метадані
-  FE->>API: multipart/form-data request
-  API->>AUTH: Валідація сесії (Role Check)
-  AUTH-->>API: userId, role
-  API->>ST: Upload файлу в Secure Bucket
-  ST-->>API: повертає storage path
-  API->>DB: Transaction: Create Report + Parse Data
-  DB-->>API: report id
-  API->>N: Trigger System Notification
-  API-->>FE: 201 Created
-  FE-->>U: Toast: "Звіт успішно завантажено"
-```
+  U->>UI: Завантажує файл (PDF/XLSX)
+  UI->>API: POST /api/reports/upload
+  Note over API: Перевірка сесії (Auth)
+  API->>FS: Збереження файлу в ./uploads
+  FS-->>API: Шлях до файлу
+  API->>DB: Запис метаданих (Назва, Розмір, Автор)
+  DB-->>API: ID запису
+  API-->>UI: 201 Created
+  UI-->>U: Повідомлення "Збережено"
 
 ---
 
