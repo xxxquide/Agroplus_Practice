@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import type { Field, InventoryItem, Machinery, Report } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 
@@ -20,7 +21,7 @@ export async function GET() {
   XLSX.utils.book_append_sheet(
     workbook,
     XLSX.utils.json_to_sheet(
-      fields.map((item) => ({
+      fields.map((item: Field) => ({
         code: item.code,
         name: item.name,
         region: item.region,
@@ -41,7 +42,7 @@ export async function GET() {
   XLSX.utils.book_append_sheet(
     workbook,
     XLSX.utils.json_to_sheet(
-      inventory.map((item) => ({
+      inventory.map((item: InventoryItem) => ({
         name: item.name,
         category: item.category,
         quantity: item.quantity,
@@ -58,7 +59,7 @@ export async function GET() {
   XLSX.utils.book_append_sheet(
     workbook,
     XLSX.utils.json_to_sheet(
-      machinery.map((item) => ({
+      machinery.map((item: Machinery) => ({
         name: item.name,
         type: item.type,
         status: item.status,
@@ -71,7 +72,7 @@ export async function GET() {
   XLSX.utils.book_append_sheet(
     workbook,
     XLSX.utils.json_to_sheet(
-      reports.map((item) => ({
+      reports.map((item: Report) => ({
         fileNameOriginal: item.fileNameOriginal,
         category: item.category,
         tags: item.tags,
