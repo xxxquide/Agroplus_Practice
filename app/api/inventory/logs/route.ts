@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     include: { inventoryItem: true }
   });
   return NextResponse.json({
-    logs: logs.map((log) => ({
+    logs: logs.map((log: typeof logs[number]) => ({
       id: log.id,
       name: log.inventoryItem?.name ?? "Ресурс",
       amount: log.amount ?? 0,
