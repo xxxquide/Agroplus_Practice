@@ -2,9 +2,21 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { hash } from "bcryptjs";
-import { Prisma, type UserRole, type User } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { verifySessionToken, SESSION_COOKIE } from "@/lib/auth";
+
+type UserRole = "ADMIN" | "MANAGER" | "VIEWER";
+type UserRow = {
+  id: string;
+  login: string;
+  email: string | null;
+  name: string;
+  role: UserRole;
+  isActive: boolean;
+  createdAt: Date;
+  lastLoginAt: Date | null;
+  lastActiveAt: Date | null;
+};
 
 const updateSchema = z.object({
   name: z.string().min(2).optional(),
@@ -15,7 +27,7 @@ const updateSchema = z.object({
   password: z.string().min(6).optional()
 });
 
-function toUserResponse(user: User) {
+function toUserResponse(user: UserRow) {
   return {
     id: user.id,
     login: user.login,
@@ -103,7 +115,7 @@ export async function PATCH(
     });
     return NextResponse.json({ user: toUserResponse(user) });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if ((error as { code?: string } | null)?.code === "P2002") {
       return NextResponse.json(
         { error: "Логін або email вже використовується" },
         { status: 409 }
