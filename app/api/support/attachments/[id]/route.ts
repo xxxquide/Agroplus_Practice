@@ -5,14 +5,15 @@ import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const user = await requireUser();
   if (!user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
   const attachment = await prisma.supportAttachment.findUnique({
-    where: { id: params.id }
+    where: { id }
   });
   if (!attachment) {
     return NextResponse.json({ message: "Not found" }, { status: 404 });

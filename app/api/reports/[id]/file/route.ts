@@ -7,14 +7,15 @@ import { requireUser } from "@/lib/session";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const user = await requireUser();
   if (!user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const report = await prisma.report.findUnique({ where: { id: params.id } });
+  const report = await prisma.report.findUnique({ where: { id } });
   if (!report) {
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }

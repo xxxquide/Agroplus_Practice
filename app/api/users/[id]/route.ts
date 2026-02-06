@@ -45,8 +45,9 @@ async function getAdminSession() {
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const session = await getAdminSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -59,7 +60,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Невірні дані" }, { status: 400 });
   }
 
-  if (params.id === session.uid) {
+  if (id === session.uid) {
     if (payload.isActive === false) {
       return NextResponse.json(
         { error: "Не можна заблокувати власний акаунт" },
@@ -97,7 +98,7 @@ export async function PATCH(
 
   try {
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data
     });
     return NextResponse.json({ user: toUserResponse(user) });
