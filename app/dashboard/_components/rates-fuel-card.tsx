@@ -103,15 +103,15 @@ export function RatesFuelCard({
   }, [rates, labels]);
 
   const rateDomain = React.useMemo(() => {
-    if (!rates) return ["auto", "auto"] as const;
+    if (!rates) return ["auto", "auto"] as [string, string];
     const values = [...rates.history.USD, ...rates.history.EUR].filter(
       (value) => typeof value === "number" && Number.isFinite(value)
     ) as number[];
-    if (!values.length) return ["auto", "auto"] as const;
+    if (!values.length) return ["auto", "auto"] as [string, string];
     const min = Math.min(...values);
     const max = Math.max(...values);
     const padding = Math.max(0.05, (max - min) * 0.2);
-    return [Number((min - padding).toFixed(2)), Number((max + padding).toFixed(2))] as const;
+    return [Number((min - padding).toFixed(2)), Number((max + padding).toFixed(2))] as [number, number];
   }, [rates]);
 
   const dieselSeries = React.useMemo(() => {
