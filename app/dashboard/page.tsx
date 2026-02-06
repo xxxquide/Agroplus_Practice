@@ -5,6 +5,8 @@ import { GlassCard } from "@/components/ui/glass";
 import { IconRail } from "@/components/ui/icon-rail";
 import { DashboardClient } from "./_components/dashboard-client";
 import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 import {
   Home,
   Map as MapIcon,

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { ReportsClient } from "./_components/reports-client";
 
+export const dynamic = "force-dynamic";
 export default async function ReportsPage() {
   const reports = await prisma.report.findMany({
     orderBy: { uploadedAt: "desc" },

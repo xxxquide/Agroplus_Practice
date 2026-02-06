@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { FieldsClient } from "./_components/fields-client";
 
+export const dynamic = "force-dynamic";
 export default async function FieldsPage() {
   const fields = await prisma.field.findMany({
     orderBy: { code: "asc" },

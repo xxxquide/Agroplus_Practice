@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { WarehouseClient } from "./_components/warehouse-client";
 
+export const dynamic = "force-dynamic";
 export default async function WarehousePage() {
   const items = await prisma.inventoryItem.findMany({ orderBy: { updatedAt: "desc" } });
   let consumeLogs: {

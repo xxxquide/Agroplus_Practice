@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { SupportClient } from "./_components/support-client";
 
+export const dynamic = "force-dynamic";
 export default async function SupportPage() {
   const tickets = await prisma.supportTicket.findMany({
     orderBy: { createdAt: "desc" },
