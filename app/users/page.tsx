@@ -22,7 +22,7 @@ export default async function UsersPage() {
   return (
     <UsersClient
       currentUserId={session.uid}
-      initialUsers={users.map((user) => ({
+      initialUsers={users.map((user: typeof users[number]) => ({
         id: user.id,
         login: user.login,
         email: user.email,

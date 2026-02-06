@@ -36,12 +36,12 @@ export default async function DashboardPage() {
   const sessionUser = await requireUser();
   const avatar = sessionUser ? mergeProfileData(sessionUser, sessionUser.profileData).avatar : null;
 
-  const areaSum = fields.reduce((acc, item) => acc + item.areaHa, 0);
-  const activeCount = fields.filter((item) => item.status === "ACTIVE").length;
+  const areaSum = fields.reduce((acc: number, item: typeof fields[number]) => acc + item.areaHa, 0);
+  const activeCount = fields.filter((item: typeof fields[number]) => item.status === "ACTIVE").length;
   const plannedTasks = Math.max(8, fields.length + 4);
 
   const yieldMap = new Map<string, number>();
-  fields.forEach((field) => {
+  fields.forEach((field: typeof fields[number]) => {
     const current = yieldMap.get(field.cropType) ?? 0;
     yieldMap.set(field.cropType, current + field.yieldForecastTons);
   });
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
               activeFields: activeCount,
               plannedTasks
             }}
-            reports={reports.map((report) => ({
+            reports={reports.map((report: typeof reports[number]) => ({
               id: report.id,
               fileNameOriginal: report.fileNameOriginal,
               mimeType: report.mimeType,
@@ -165,7 +165,7 @@ export default async function DashboardPage() {
                 ? `/api/reports/${report.id}/file?inline=1`
                 : undefined
             }))}
-            machinery={machinery.map((item) => ({
+            machinery={machinery.map((item: typeof machinery[number]) => ({
               id: item.id,
               name: item.name,
               type: item.type,
@@ -175,7 +175,7 @@ export default async function DashboardPage() {
             fuelPrice={fuel?.priceUahPerL ?? null}
             fuelUpdatedAt={fuel?.updatedAt.toISOString() ?? null}
             yieldData={yieldData}
-            manualYield={manualYield.map((entry) => ({
+            manualYield={manualYield.map((entry: typeof manualYield[number]) => ({
               id: entry.id,
               name: entry.cropType,
               value: entry.value,

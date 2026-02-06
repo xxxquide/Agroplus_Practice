@@ -8,14 +8,14 @@ export default async function SupportPage() {
   });
   return (
     <SupportClient
-      initialTickets={tickets.map((ticket) => ({
+      initialTickets={tickets.map((ticket: typeof tickets[number]) => ({
         id: ticket.id,
         subject: ticket.subject,
         category: ticket.category,
         priority: ticket.priority,
         status: ticket.status,
         createdAt: ticket.createdAt.toISOString(),
-        attachments: ticket.attachments.map((file) => ({
+        attachments: ticket.attachments.map((file: typeof ticket.attachments[number]) => ({
           id: file.id,
           fileNameOriginal: file.fileNameOriginal
         }))

@@ -15,7 +15,7 @@ export default async function FieldsPage() {
 
   return (
     <FieldsClient
-      initialFields={fields.map((field) => ({
+      initialFields={fields.map((field: typeof fields[number]) => ({
         id: field.id,
         code: field.code,
         name: field.name,
@@ -29,20 +29,20 @@ export default async function FieldsPage() {
         soilMoisturePct: field.soilMoisturePct,
         lastInspectionAt: field.lastInspectionAt?.toISOString() ?? null,
         geometryGeoJSON: field.geometryGeoJSON,
-        tasks: field.tasks.map((task) => ({
+        tasks: field.tasks.map((task: typeof field.tasks[number]) => ({
           id: task.id,
           title: task.title,
           status: task.status,
           createdAt: task.createdAt.toISOString()
         }))
       }))}
-      machinery={machinery.map((item) => ({
+      machinery={machinery.map((item: typeof machinery[number]) => ({
         id: item.id,
         name: item.name,
         type: item.type,
         status: item.status
       }))}
-      reports={reports.map((report) => ({
+      reports={reports.map((report: typeof reports[number]) => ({
         id: report.id,
         fileNameOriginal: report.fileNameOriginal,
         tags: report.tags,

@@ -91,7 +91,10 @@ export function FieldsMap({
       };
 
       for (const feature of features) {
-        walkCoords(feature.geometry?.coordinates);
+        const geom = feature.geometry;
+        if (geom && "coordinates" in geom) {
+          walkCoords(geom.coordinates);
+        }
       }
 
       if (!Number.isFinite(minX) || !Number.isFinite(minY)) return;
@@ -186,7 +189,7 @@ export function FieldsMap({
     });
 
     setOverlayPaths(paths);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateDraftOverlay = React.useCallback(() => {
@@ -200,21 +203,21 @@ export function FieldsMap({
     const projected = points.map((coord) => map.project({ lng: coord[0], lat: coord[1] }));
     const line = projected.length
       ? `M ${projected[0].x} ${projected[0].y} ${projected
-          .slice(1)
-          .map((p) => `L ${p.x} ${p.y}`)
-          .join(" ")}`
+        .slice(1)
+        .map((p) => `L ${p.x} ${p.y}`)
+        .join(" ")}`
       : null;
     const polygon =
       projected.length >= 3
         ? `M ${projected[0].x} ${projected[0].y} ${projected
-            .slice(1)
-            .map((p) => `L ${p.x} ${p.y}`)
-            .join(" ")} Z`
+          .slice(1)
+          .map((p) => `L ${p.x} ${p.y}`)
+          .join(" ")} Z`
         : null;
     const pointsSvg = projected.map((point, index) => ({
       x: point.x,
       y: point.y,
-      role: index === 0 ? "first" : "point"
+      role: (index === 0 ? "first" : "point") as "first" | "point"
     }));
     setDraftOverlay({ line, polygon, points: pointsSvg });
   }, []);
@@ -625,7 +628,7 @@ export function FieldsMap({
       updateDraftSource([]);
       updateDraftOverlay();
     }
-    return () => {};
+    return () => { };
   }, [drawMode, mapReady, updateDraftSource, updateDraftOverlay]);
 
   React.useEffect(() => {

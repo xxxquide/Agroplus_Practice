@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import path from "path";
 import crypto from "crypto";
 import * as XLSX from "xlsx";
-import { prisma } from "@/lib/db";
+import { prisma, Prisma } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { parseReportWorkbook } from "@/lib/report-import";
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         importResult.machinery.length ||
         importResult.inventory.length
       ) {
-        await prisma.$transaction(async (tx: typeof prisma) => {
+        await prisma.$transaction(async (tx) => {
           for (const row of importResult.fields) {
             await tx.field.upsert({
               where: { code: row.code },

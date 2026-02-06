@@ -250,7 +250,7 @@ export function SupportClient({ initialTickets }: { initialTickets: Ticket[] }) 
               </p>
               <h1 className="text-2xl font-semibold">Центр підтримки</h1>
             </div>
-            <Button variant="outline" onClick={refreshTickets} disabled={refreshing}>
+            <Button variant="outline" onClick={() => refreshTickets()} disabled={refreshing}>
               <Clock size={16} /> Оновити статус
             </Button>
           </div>
@@ -409,7 +409,7 @@ export function SupportClient({ initialTickets }: { initialTickets: Ticket[] }) 
             <Button size="sm" onClick={handleCreate}>
               <Send size={14} /> Створити запит
             </Button>
-            <Button size="sm" variant="outline" onClick={refreshTickets}>
+            <Button size="sm" variant="outline" onClick={() => refreshTickets()}>
               <Clock size={14} /> Перевірити статус
             </Button>
             <Button

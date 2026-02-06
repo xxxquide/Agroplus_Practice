@@ -166,11 +166,11 @@ const normalizePolygon = (geometry: unknown): Geometry | null => {
     .map((poly) =>
       Array.isArray(poly)
         ? poly
-            .map(normalizeRing)
-            .filter((ring): ring is [number, number][] => Boolean(ring))
+          .map(normalizeRing)
+          .filter((ring): ring is [number, number][] => Boolean(ring))
         : null
     )
-    .filter((poly): poly is [number, number][][] => Boolean(poly) && poly.length);
+    .filter((poly): poly is [number, number][][] => poly !== null && poly.length > 0);
   if (!polygons.length) return null;
   return { type: "MultiPolygon", coordinates: polygons };
 };

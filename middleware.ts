@@ -15,7 +15,7 @@ export async function middleware(req: NextRequest) {
       .map((entry) => entry.trim())
       .filter(Boolean);
     const forwardedFor = req.headers.get("x-forwarded-for");
-    const ip = forwardedFor?.split(",")[0]?.trim() ?? req.ip ?? "";
+    const ip = forwardedFor?.split(",")[0]?.trim() ?? "";
     if (!isIpAllowed(ip, allowlist)) {
       return new NextResponse("Access denied", { status: 403 });
     }

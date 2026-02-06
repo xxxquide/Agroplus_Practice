@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { WarehouseClient } from "./_components/warehouse-client";
 
@@ -22,25 +23,28 @@ export default async function WarehousePage() {
   }
 
   return (
-    <WarehouseClient
-      initialItems={items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        quantity: item.quantity,
-        unit: item.unit,
-        responsible: item.responsible,
-        status: item.status,
-        minThreshold: item.minThreshold,
-        updatedAt: item.updatedAt.toISOString()
-      }))}
-      recentConsumes={consumeLogs.map((log) => ({
-        id: log.id,
-        name: log.inventoryItem?.name ?? "Ресурс",
-        amount: log.amount ?? 0,
-        reason: log.reason ?? null,
-        createdAt: log.createdAt.toISOString()
-      }))}
-    />
+    <Suspense fallback={<div className="min-h-screen bg-aurora" />}>
+      <WarehouseClient
+        initialItems={items.map((item: typeof items[number]) => ({
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          quantity: item.quantity,
+          unit: item.unit,
+          responsible: item.responsible,
+          status: item.status,
+          minThreshold: item.minThreshold,
+          updatedAt: item.updatedAt.toISOString()
+        }))}
+        recentConsumes={consumeLogs.map((log: typeof consumeLogs[number]) => ({
+          id: log.id,
+          name: log.inventoryItem?.name ?? "Ресурс",
+          amount: log.amount ?? 0,
+          reason: log.reason ?? null,
+          createdAt: log.createdAt.toISOString()
+        }))}
+      />
+    </Suspense>
   );
 }
+

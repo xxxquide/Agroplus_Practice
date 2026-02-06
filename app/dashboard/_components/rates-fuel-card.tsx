@@ -130,16 +130,16 @@ export function RatesFuelCard({
     return [];
   }, [fuelHistory, fuelPrice, labels]);
 
-  const dieselDomain = React.useMemo(() => {
-    if (!dieselSeries.length) return ["auto", "auto"] as const;
+  const dieselDomain = React.useMemo((): [string, string] | [number, number] => {
+    if (!dieselSeries.length) return ["auto", "auto"];
     const values = dieselSeries
       .map((item) => item.value)
       .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
-    if (!values.length) return ["auto", "auto"] as const;
+    if (!values.length) return ["auto", "auto"];
     const min = Math.min(...values);
     const max = Math.max(...values);
     const padding = Math.max(0.05, (max - min) * 0.2);
-    return [Number((min - padding).toFixed(2)), Number((max + padding).toFixed(2))] as const;
+    return [Number((min - padding).toFixed(2)), Number((max + padding).toFixed(2))];
   }, [dieselSeries]);
 
   const handleFuelSave = async () => {

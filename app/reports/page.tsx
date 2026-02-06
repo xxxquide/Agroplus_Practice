@@ -9,7 +9,7 @@ export default async function ReportsPage() {
 
   return (
     <ReportsClient
-      initialReports={reports.map((report) => ({
+      initialReports={reports.map((report: typeof reports[number]) => ({
         id: report.id,
         fileNameOriginal: report.fileNameOriginal,
         mimeType: report.mimeType,

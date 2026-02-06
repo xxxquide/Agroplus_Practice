@@ -126,7 +126,7 @@ const headerAliases = {
 
 const resolveHeaderKey = (header: string) => {
   const normalized = normalizeHeader(header);
-  const entries = Object.entries(headerAliases) as Array<[keyof typeof headerAliases, string[]]>;
+  const entries = Object.entries(headerAliases) as Array<[keyof typeof headerAliases, readonly string[]]>;
   for (const [key, aliases] of entries) {
     if (aliases.includes(normalized)) return key;
   }
