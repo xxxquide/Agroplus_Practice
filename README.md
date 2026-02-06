@@ -1,59 +1,75 @@
 # AgroPlus Portal
 
-> Мій внутрішній операційний портал для агробізнесу. Тут я зібрав повний контур роботи: поля, склад, техніку, звіти, користувачів, підтримку і сповіщення.
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?style=for-the-badge&logo=typescript)
+![Prisma](https://img.shields.io/badge/Prisma-6.2-2d3748?style=for-the-badge&logo=prisma)
+![Tailwind](https://img.shields.io/badge/Tailwind-3.4-38b2ac?style=for-the-badge&logo=tailwind-css)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql)
 
-## Зміст
+**AgroPlus Portal** — це внутрішній операційний портал для агробізнесу. Тут реалізовано повний контур роботи підприємства: від моніторингу полів та складського обліку до керування технікою, звітами та підтримкою користувачів.
 
-- [Візія проєкту](#візія-проєкту)
-- [Модулі системи](#модулі-системи)
-- [Архітектура](#архітектура)
-- [Потік завантаження звіту](#потік-завантаження-звіту)
-- [Карта сторінок](#карта-сторінок)
-- [Технологічний стек](#технологічний-стек)
-- [Мій локальний запуск](#мій-локальний-запуск)
-- [Мій процес міграцій і деплою](#мій-процес-міграцій-і-деплою)
-- [Доступ через OpenVPN](#доступ-через-openvpn)
-- [Структура проєкту](#структура-проєкту)
-- [Скрипти](#скрипти)
-- [Безпека](#безпека)
+---
 
-## Візія проєкту
+## 📑 Зміст
 
-Цей проєкт я побудував як єдину робочу систему для операційної команди.
+- [Візія проєкту](#-візія-проєкту)
+- [Модулі системи](#-модулі-системи)
+- [Архітектура](#-архітектура)
+- [Потік завантаження звіту](#-потік-завантаження-звіту)
+- [Карта сторінок](#-карта-сторінок)
+- [Технологічний стек](#-технологічний-стек)
+- [Мій локальний запуск](#-мій-локальний-запуск)
+- [Мій процес міграцій і деплою](#-мій-процес-міграцій-і-деплою)
+- [Доступ через OpenVPN](#-доступ-через-openvpn)
+- [Структура проєкту](#-структура-проєкту)
+- [Скрипти](#-скрипти)
+- [Безпека](#-безпека)
 
-- Поля: карта, геометрія, задачі, статуси.
-- Склад: облік, списання, історія руху.
-- Звіти: upload `PDF/XLSX`, імпорт даних, прив'язка до користувача.
-- Користувачі: ролі, активність, профіль і налаштування.
-- Підтримка: тікети, пріоритети, вкладення.
-- Сповіщення: системні події в реальному робочому потоці.
+---
 
-## Модулі системи
+## 🎯 Візія проєкту
 
-| Модуль | Як працює | Сутності |
-|---|---|---|
-| `Dashboard` | KPI, погода, паливо, курси, прогнози | `YieldForecast`, `Machinery`, `Notification` |
-| `Fields` | Інтерактивна карта та задачі по полях | `Field`, `FieldTask` |
-| `Warehouse` | Складські позиції, історія, списання | `InventoryItem`, `InventoryLog` |
-| `Reports` | Завантаження, парсинг XLSX, зберігання файлів | `Report`, Supabase Storage |
-| `Users` | Користувачі, ролі, активність | `User` |
-| `Support` | Тікети, пріоритети, вкладення | `SupportTicket`, `SupportAttachment` |
-| `Profile / Settings` | Персональні параметри користувача | `User.profileData`, `User.settingsData` |
+Цей проєкт побудований як єдина екосистема для операційної команди агрохолдингу, що об'єднує розрізнені процеси в одному інтерфейсі.
 
-## Архітектура
+- **Поля:** Інтерактивна карта, геометрія ділянок, сівозміна, статус робіт.
+- **Склад:** Облік залишків, логування списань, історія руху ТМЦ.
+- **Звіти:** Централізований upload `PDF/XLSX`, автопарсинг даних, прив'язка до відповідальних.
+- **Користувачі:** RBAC (Role-Based Access Control), моніторинг активності, профілі.
+- **Підтримка:** Внутрішня тікет-система з пріоритезацією та вкладеннями.
+- **Сповіщення:** Система реакцій на критичні події (низький залишок на складі, нові звіти).
+
+---
+
+## 🧩 Модулі системи
+
+| Модуль | Опис функціоналу | Ключові сутності БД |
+|--------|------------------|---------------------|
+| **Dashboard** | Оперативна панель: KPI, погода, статус палива, курси валют | `YieldForecast`, `Machinery`, `Notification` |
+| **Fields** | Візуалізація земельного банку, кадастр, завдання агрономам | `Field`, `FieldTask` |
+| **Warehouse** | Керування запасами ЗЗР, палива та посівного матеріалу | `InventoryItem`, `InventoryLog` |
+| **Reports** | Сховище документації, аналітика файлів | `Report`, Supabase Storage |
+| **Users** | Адміністрування персоналу, безпека доступу | `User` |
+| **Support** | Helpdesk для співробітників | `SupportTicket`, `SupportAttachment` |
+| **Profile** | Персоналізація та налаштування акаунту | `User.profileData`, `User.settingsData` |
+
+---
+
+## 🏗 Архітектура
+
+Система побудована на базі сучасної Full-Stack архітектури Next.js із чітким розділенням на клієнтський та серверний рівні.
 
 ```mermaid
 flowchart TB
-  subgraph C["Клієнтський контур"]
+  subgraph C["Клієнтський контур (Browser)"]
     UI["Next.js UI (App Router)"]
-    MW["Middleware<br/>VPN allowlist + session guard"]
+    MW["Middleware<br/>(VPN allowlist + Session guard)"]
     UI --> MW
   end
 
-  subgraph S["Серверний контур"]
+  subgraph S["Серверний контур (Node.js)"]
     API["API Routes (app/api/*)"]
-    AUTH["Auth + Session (cookies, token)"]
-    DOMAIN["Domain services (lib/*)"]
+    AUTH["Auth Service (Cookies / Tokens)"]
+    DOMAIN["Domain Logic (lib/*)"]
     PRISMA["Prisma ORM"]
     MW --> API
     API --> AUTH
@@ -61,44 +77,51 @@ flowchart TB
     DOMAIN --> PRISMA
   end
 
-  subgraph D["Дані та інтеграції"]
-    PG["Supabase PostgreSQL"]
-    ST["Supabase Storage"]
-    EXT["Weather / Rates providers"]
+  subgraph D["Дані та Інтеграції"]
+    PG["PostgreSQL (Supabase)"]
+    ST["Supabase Storage (S3)"]
+    EXT["External APIs (Weather / Bank)"]
     PRISMA --> PG
     API --> ST
     API --> EXT
   end
 
-  PG --> NOTIF["Notifications / Presence / History"]
+  PG --> NOTIF["Notifications / Presence"]
   NOTIF --> UI
 ```
 
-## Потік завантаження звіту
+---
+
+## 🔄 Потік завантаження звіту
+
+Процес обробки файлів реалізований асинхронно з миттєвим сповіщенням користувача.
 
 ```mermaid
 sequenceDiagram
   participant U as Користувач
   participant FE as Reports UI
   participant API as POST /api/reports/upload
-  participant AUTH as Session check
+  participant AUTH as Session Check
   participant ST as Supabase Storage
   participant DB as PostgreSQL (Prisma)
   participant N as Notifications
 
   U->>FE: Обирає PDF/XLSX + метадані
-  FE->>API: multipart/form-data
-  API->>AUTH: Перевірка сесії
-  AUTH-->>API: userId/role
-  API->>ST: Upload файлу в bucket
-  ST-->>API: storage path
-  API->>DB: create Report + parsed data для XLSX
+  FE->>API: multipart/form-data request
+  API->>AUTH: Валідація сесії (Role Check)
+  AUTH-->>API: userId, role
+  API->>ST: Upload файлу в Secure Bucket
+  ST-->>API: повертає storage path
+  API->>DB: Transaction: Create Report + Parse Data
   DB-->>API: report id
-  API->>N: create notification
+  API->>N: Trigger System Notification
   API-->>FE: 201 Created
+  FE-->>U: Toast: "Звіт успішно завантажено"
 ```
 
-## Карта сторінок
+---
+
+## 🗺 Карта сторінок
 
 ```mermaid
 flowchart LR
@@ -110,56 +133,87 @@ flowchart LR
   DASH --> SUPPORT["/support"]
   DASH --> PROFILE["/profile"]
   DASH --> SETTINGS["/settings"]
+  
+  style LOGIN fill:#f9f,stroke:#333,stroke-width:2px
+  style DASH fill:#bbf,stroke:#333,stroke-width:2px
 ```
 
-## Технологічний стек
+---
+
+## 🛠 Технологічний стек
 
 | Шар | Технології |
-|---|---|
-| UI | `Next.js 15`, `React 19`, `Tailwind CSS`, `MapLibre`, `Recharts` |
-| Backend | `Next.js Route Handlers`, `Prisma` |
-| Data | `Supabase PostgreSQL`, `Supabase Storage` |
-| QA | `Vitest`, `Playwright` |
+|-----|------------|
+| **Frontend** | Next.js 15 (App Router), React 19, Tailwind CSS, Shadcn UI, MapLibre GL, Recharts |
+| **Backend** | Next.js Route Handlers, Node.js |
+| **Database & ORM** | PostgreSQL, Prisma ORM 6 |
+| **Storage** | Supabase Storage |
+| **Testing** | Vitest (Unit), Playwright (E2E) |
+| **Utils** | Zod (Validation), date-fns, XLSX (Parser) |
 
-## Мій локальний запуск
+---
 
-Я використовую такий цикл:
+## 🚀 Мій локальний запуск
 
-1. Встановлюю залежності.
+Для розгортання проєкту локально я використовую наступний алгоритм:
+
+### 1. Встановлення залежностей
+
 ```bash
 pnpm install
 ```
 
-2. Створюю `.env` із шаблону.
+### 2. Налаштування оточення
+
+Створюю `.env` файл на основі прикладу:
+
 ```bash
 cp .env.example .env
 ```
 
-3. Заповнюю ключові змінні: `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`.
+### 3. Конфігурація змінних
 
-4. Синхронізую схему з БД.
+Заповнюю ключові параметри доступу до БД та сховища:
+- `DATABASE_URL`
+- `DIRECT_URL`
+- `AUTH_SECRET`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+### 4. Синхронізація бази даних
+
+Заливаю схему Prisma у PostgreSQL:
+
 ```bash
 pnpm db:push
 ```
 
-5. За потреби заливаю демо-дані.
+### 5. Наповнення демо-даними
+
+Запускаю сідер для створення адміна та тестових сутностей:
+
 ```bash
 pnpm db:seed
 ```
 
-6. Підіймаю застосунок.
+### 6. Запуск сервера розробки
+
 ```bash
 pnpm dev
 ```
 
-## Мій процес міграцій і деплою
+---
 
-1. Локально вношу зміни в `prisma/schema.prisma`.
-2. Створюю міграцію через `prisma migrate dev`.
-3. Комічу `prisma/migrations/*` у GitHub разом із кодом.
-4. На сервері виконую `prisma migrate deploy` перед запуском.
+## 📦 Мій процес міграцій і деплою
 
-Серверний цикл:
+Я використовую суворий підхід до керування схемою бази даних:
+
+1. Локально вношу зміни в `prisma/schema.prisma`
+2. Створюю файл міграції: `pnpm prisma migrate dev`
+3. Комічу папку `prisma/migrations/*` у репозиторій
+4. На сервері застосовую міграції перед стартом
+
+### Серверний цикл запуску (CI/CD)
 
 ```bash
 pnpm install --frozen-lockfile
@@ -168,49 +222,50 @@ pnpm build
 pnpm start
 ```
 
-### IPv4 / IPv6 у моєму сценарії
+**Примітка щодо IPv6:** У продакшн середовищі `DIRECT_URL` часто працює через IPv6 пулери транзакцій Supabase, тому на сервері налаштовано підтримку обох протоколів.
 
-- `DIRECT_URL` інколи доступний лише по IPv6.
-- Якщо сервер IPv4-only, міграції я запускаю з вузла, де є IPv6.
-- Runtime сервера тримаю на `DATABASE_URL` (pooler), якщо він доступний із сервера.
+---
 
-## Доступ через OpenVPN
+## 🔐 Доступ через OpenVPN
 
-У мережевому контурі я використовую два рівні захисту:
+Система спроєктована для роботи в ізольованому контурі. Я використовую два рівні захисту доступу:
 
-- інфраструктурний: `OpenVPN + firewall/security group`;
-- прикладний: `VPN_ALLOWLIST` у middleware.
+1. **Інфраструктурний:** Доступ до сервера дозволено лише через OpenVPN тунель (Firewall/Security Groups)
+2. **Прикладний:** Middleware перевіряє IP-адресу клієнта через змінну `VPN_ALLOWLIST`
 
-Приклад формату:
+### Конфігурація (`.env`)
 
 ```env
+# Дозволені підмережі VPN та окремі адміністративні IP
 VPN_ALLOWLIST="10.8.0.0/24,203.0.113.10/32"
 ```
 
-## Структура проєкту
+---
 
-### Архітектурна карта директорій
+## 📂 Структура проєкту
+
+### Архітектурна карта
 
 ```mermaid
 flowchart LR
-  subgraph UI["UI Layer"]
-    APP["app/* pages"]
-    CMP["components/*"]
-    ICO["icons/*"]
+  subgraph UI["UI Layer (Frontend)"]
+    APP["app/* (Pages & Routes)"]
+    CMP["components/* (React Components)"]
+    ICO["icons/* (Assets)"]
   end
 
   subgraph APPLOGIC["Application Layer"]
-    API["app/api/*"]
-    MID["middleware.ts"]
+    API["app/api/* (Endpoints)"]
+    MID["middleware.ts (Guard)"]
   end
 
   subgraph DOMAIN["Domain Layer"]
-    LIB["lib/*"]
+    LIB["lib/* (Business Logic)"]
   end
 
   subgraph DATA["Data Layer"]
-    PRI["prisma/*"]
-    UP["uploads/*"]
+    PRI["prisma/* (Schema & Seeds)"]
+    UP["uploads/* (Local Buffer)"]
   end
 
   APP --> CMP
@@ -221,69 +276,64 @@ flowchart LR
   API --> UP
 ```
 
-### Дерево і роль кожної частини
+### Призначення директорій
 
-```text
+```
 .
-├── app/                         # сторінки, layout, route handlers
-│   ├── api/                     # backend endpoints
-│   ├── dashboard/               # оперативна панель
-│   ├── fields/                  # карта полів і задачі
-│   ├── warehouse/               # склад і рух залишків
-│   ├── reports/                 # звіти і upload UI
-│   ├── users/                   # користувачі та ролі
-│   ├── support/                 # тікети підтримки
-│   ├── profile/                 # профіль
-│   └── settings/                # налаштування
+├── app/                         # App Router: сторінки, layout, API
+│   ├── api/                     # Backend endpoints
+│   ├── dashboard/               # Головна панель (KPI)
+│   ├── fields/                  # Модуль карти полів
+│   ├── warehouse/               # Складський облік
+│   ├── reports/                 # Звіти та завантаження
+│   ├── users/                   # Керування персоналом
+│   ├── support/                 # Тікет-система
+│   └── settings/                # Налаштування системи
 ├── components/
-│   ├── ui/                      # універсальні UI-компоненти
-│   └── branding/                # бренд-елементи
-├── icons/                       # іконки проєкту
-├── lib/                         # доменна логіка, auth, db, утиліти
+│   ├── ui/                      # Базові UI-компоненти (Buttons, Inputs, Modals)
+│   └── branding/                # Логотипи та стилі бренду
+├── lib/                         # Бізнес-логіка, утиліти, авторизація
 ├── prisma/
-│   ├── schema.prisma            # модель даних
-│   └── seed.ts                  # стартові дані
-├── scripts/                     # технічні скрипти (наприклад, генерація звітів)
-├── tests/
-│   ├── unit/                    # unit тести
-│   └── e2e/                     # end-to-end тести
-├── uploads/                     # локальні завантаження/тестові файли
-├── middleware.ts                # контроль доступу (session + VPN allowlist)
-└── README.md                    # документація проєкту
+│   ├── schema.prisma            # Опис структури БД
+│   └── seed.ts                  # Скрипт початкового наповнення
+├── scripts/                     # Допоміжні скрипти автоматизації
+├── tests/                       # Тестування (Unit + E2E)
+└── middleware.ts                # Захист маршрутів та VPN-фільтрація
 ```
 
-### Де я додаю новий функціонал
+---
 
-| Що додаю | Куди додаю |
-|---|---|
-| Нова сторінка | `app/<feature>/page.tsx` |
-| Новий API endpoint | `app/api/<feature>/route.ts` |
-| Нова бізнес-логіка | `lib/<feature>.ts` |
-| Нова таблиця / зв’язок | `prisma/schema.prisma` + міграція |
-| Нові UI-примітиви | `components/ui/*` |
-| Новий e2e сценарій | `tests/e2e/*` |
-| Новий unit-тест | `tests/unit/*` |
+## 📜 Скрипти
 
-## Скрипти
+В `package.json` налаштовано команди для всіх етапів життєвого циклу:
 
-- `pnpm dev` - локальна розробка
-- `pnpm build` - production build
-- `pnpm start` - запуск production
-- `pnpm lint` - перевірка ESLint
-- `pnpm prisma` - Prisma CLI
-- `pnpm db:push` - синхронізація схеми без міграцій
-- `pnpm db:seed` - початкові демо-дані
-- `pnpm test:unit` - unit-тести
-- `pnpm test:e2e` - e2e-тести
-- `pnpm test` - повний прогін тестів
+- `pnpm dev` — Запуск локального сервера розробки
+- `pnpm build` — Компіляція оптимізованого production білда
+- `pnpm start` — Запуск готового білда
+- `pnpm lint` — Перевірка коду лінтером
+- `pnpm db:push` — Швидка синхронізація схеми (для dev)
+- `pnpm db:seed` — Заповнення бази демо-даними
+- `pnpm test` — Повний прогін усіх тестів (Unit + E2E)
 
-## Безпека
+---
 
-- `.env` не потрапляє в Git.
-- `SUPABASE_SERVICE_ROLE_KEY` використовую тільки на серверній стороні.
-- Після підозри на витік одразу роблю ротацію: `DB password`, `service role key`, `AUTH_SECRET`.
+## 🛡 Безпека
 
-## Демо-доступ (локально)
+- **Environment Isolation:** Файл `.env` виключено з Git
+- **Role Management:** `SUPABASE_SERVICE_ROLE_KEY` використовується виключно на серверній стороні для адміністративних дій
+- **Rotation Policy:** У разі компрометації ключів виконується негайна ротація `AUTH_SECRET` та облікових даних БД
 
-- Логін: `admin`
-- Пароль: `admin123`
+### 🔑 Демо-доступ (локально)
+
+Для входу в систему після сідінгу використовуйте:
+
+- **Логін:** `admin`
+- **Пароль:** `admin123`
+
+---
+
+<div align="center">
+
+**Розроблено з любов'ю до агротехнологій** 🌱
+
+</div>
