@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+enum InventoryStatus {
+  ENOUGH
+  LOW
+  CRITICAL
+}
+
+enum InventoryLogType {
+  CREATE
+  UPDATE
+  CONSUME
+}
+
+enum MachineryStatus {
+  ACTIVE
+  MAINTENANCE
+  OFFLINE
+}
+
+enum FieldStatus {
+  ACTIVE
+  DORMANT
+  HARVEST
+}
+
+enum FieldTaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  login        String   @unique
+  email        String?  @unique
+  name         String
+  passwordHash String
+  role         UserRole @default(ADMIN)
+  createdAt    DateTime @default(now())
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  lastActiveAt DateTime?
+  profileData  Json?
+  settingsData Json?
+
+  reports        Report[]
+  notifications  Notification[]
+  supportTickets SupportTicket[]
+}
+
+model Report {
+  id               String   @id @default(cuid())
+  fileNameOriginal String
+  fileNameStored   String
+  mimeType         String
+  sizeBytes        Int
+  category         String
+  tags             String
+  description      String?
+  uploadedAt       DateTime @default(now())
+
+  uploadedByUserId String
+  uploadedByUser   User     @relation(fields: [uploadedByUserId], references: [id])
+}
+
+enum NotificationKind {
+  REPORT
+  FIELD
+  INVENTORY
+  MACHINERY
+  SUPPORT
+  SYSTEM
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  title     String
+  body      String?
+  kind      NotificationKind @default(SYSTEM)
+  createdAt DateTime         @default(now())
+  readAt    DateTime?
+  userId    String?
+  user      User?            @relation(fields: [userId], references: [id])
+}
+
+enum SupportStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+enum SupportPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model SupportTicket {
+  id              String          @id @default(cuid())
+  subject         String
+  category        String
+  priority        SupportPriority @default(MEDIUM)
+  status          SupportStatus   @default(OPEN)
+  message         String
+  createdAt       DateTime        @default(now())
+  createdByUserId String
+  createdByUser   User            @relation(fields: [createdByUserId], references: [id])
+  attachments     SupportAttachment[]
+}
+
+model SupportAttachment {
+  id               String        @id @default(cuid())
+  ticketId         String
+  ticket           SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  fileNameOriginal String
+  fileNameStored   String
+  mimeType         String
+  sizeBytes        Int
+  createdAt        DateTime      @default(now())
+}
+
+model YieldForecast {
+  id        String   @id @default(cuid())
+  cropType  String
+  value     Float
+  createdAt DateTime @default(now())
+}
+
+model Field {
+  id                 String      @id @default(cuid())
+  code               String      @unique
+  name               String
+  region             String
+  district           String
+  cropType           String
+  status             FieldStatus @default(ACTIVE)
+  areaHa             Float
+  sowingDate         DateTime?
+  yieldForecastTons  Float
+  soilMoisturePct    Float
+  lastInspectionAt   DateTime?
+  geometryGeoJSON    String
+  tasks              FieldTask[]
+}
+
+model FieldTask {
+  id        String          @id @default(cuid())
+  fieldId   String
+  field     Field           @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  title     String
+  status    FieldTaskStatus @default(OPEN)
+  createdAt DateTime        @default(now())
+}
+
+model Machinery {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  type      String
+  status    MachineryStatus @default(ACTIVE)
+  updatedAt DateTime        @updatedAt
+}
+
+model InventoryItem {
+  id           String           @id @default(cuid())
+  name         String           @unique
+  category     String
+  quantity     Float
+  unit         String
+  responsible  String
+  status       InventoryStatus @default(ENOUGH)
+  minThreshold Float
+  updatedAt    DateTime        @updatedAt
+  logs         InventoryLog[]
+}
+
+model InventoryLog {
+  id              String           @id @default(cuid())
+  inventoryItemId String
+  inventoryItem   InventoryItem    @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  type            InventoryLogType
+  amount          Float?
+  reason          String?
+  createdAt       DateTime         @default(now())
+}
+
+model FuelPrice {
+  id           String   @id @default(cuid())
+  fuelType     String   @unique
+  priceUahPerL Float
+  updatedAt    DateTime @updatedAt
+  source       String
+}
+
+model FuelPriceHistory {
+  id           String   @id @default(cuid())
+  priceUahPerL Float
+  createdAt    DateTime @default(now())
+}
+
+model WeatherCache {
+  id        String   @id @default(cuid())
+  key       String?  @unique
+  payload   String
+  updatedAt DateTime @updatedAt
+}
+
+model RateCache {
+  id        String   @id @default(cuid())
+  payload   String
+  updatedAt DateTime @updatedAt
+}

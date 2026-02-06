@@ -1,0 +1,58 @@
+{
+  "name": "agroplus-portal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prisma": "prisma",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "test": "pnpm test:unit && pnpm test:e2e"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.2.0",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@tanstack/react-table": "^8.20.5",
+    "@mapbox/mapbox-gl-draw": "^1.4.3",
+    "bcryptjs": "^2.4.3",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.471.0",
+    "maplibre-gl": "^4.7.1",
+    "next": "^15.2.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^2.12.7",
+    "@supabase/supabase-js": "^2.49.1",
+    "sonner": "^1.5.0",
+    "tailwind-merge": "^2.5.4",
+    "xlsx": "^0.18.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/geojson": "^7946.0.14",
+    "@types/node": "^20.11.24",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^9.3.0",
+    "eslint-config-next": "^15.2.0",
+    "postcss": "^8.4.38",
+    "prisma": "^6.2.0",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.17.0",
+    "typescript": "^5.6.3",
+    "vitest": "^1.6.0",
+    "@playwright/test": "^1.48.0"
+  }
+}
