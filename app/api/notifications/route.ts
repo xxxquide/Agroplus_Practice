@@ -14,7 +14,7 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
     take: 30
   });
-  const unreadCount = notifications.filter((item) => !item.readAt).length;
+  const unreadCount = notifications.filter((item: typeof notifications[number]) => !item.readAt).length;
   return NextResponse.json({ notifications, unreadCount });
 }
 
