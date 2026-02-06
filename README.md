@@ -1,29 +1,30 @@
 # AgroPlus Portal
 
-> Мій внутрішній операційний портал для агробізнесу. Тут я зібрав повний контур роботи: поля, склад, техніку, звіти, користувачів, підтримку і сповіщення.
+> Це мій внутрішній операційний портал для агробізнесу. Він працює тільки через OpenVPN, а база даних живе на самому сервері. Без зовнішніх хмар.
 
 ## Зміст
 
 - [Візія проєкту](#візія-проєкту)
 - [Модулі системи](#модулі-системи)
 - [Архітектура](#архітектура)
-- [Потік завантаження звіту](#потік-завантаження-звіту)
+- [Шлях запиту: 5 етапів](#шлях-запиту-5-етапів)
+- [Ешелонований захист](#ешелонований-захист)
 - [Карта сторінок](#карта-сторінок)
 - [Технологічний стек](#технологічний-стек)
-- [Мій локальний запуск](#мій-локальний-запуск)
-- [Мій процес міграцій і деплою](#мій-процес-міграцій-і-деплою)
-- [Доступ через OpenVPN](#доступ-через-openvpn)
+- [Локальний запуск](#локальний-запуск)
+- [Деплой на сервер (PM2)](#деплой-на-сервер-pm2)
+- [OpenVPN і доступ](#openvpn-і-доступ)
 - [Структура проєкту](#структура-проєкту)
 - [Скрипти](#скрипти)
 - [Безпека](#безпека)
 
 ## Візія проєкту
 
-Цей проєкт я побудував як єдину робочу систему для операційної команди.
+Цей проєкт я побудував як єдину робочу систему для операційної команди:
 
 - Поля: карта, геометрія, задачі, статуси.
 - Склад: облік, списання, історія руху.
-- Звіти: upload `PDF/XLSX`, імпорт даних, прив'язка до користувача.
+- Звіти: upload `PDF/XLSX`, імпорт даних, привʼязка до користувача.
 - Користувачі: ролі, активність, профіль і налаштування.
 - Підтримка: тікети, пріоритети, вкладення.
 - Сповіщення: системні події в реальному робочому потоці.
@@ -35,7 +36,7 @@
 | `Dashboard` | KPI, погода, паливо, курси, прогнози | `YieldForecast`, `Machinery`, `Notification` |
 | `Fields` | Інтерактивна карта та задачі по полях | `Field`, `FieldTask` |
 | `Warehouse` | Складські позиції, історія, списання | `InventoryItem`, `InventoryLog` |
-| `Reports` | Завантаження, парсинг XLSX, зберігання файлів | `Report`, Supabase Storage |
+| `Reports` | Завантаження, парсинг XLSX, зберігання файлів на сервері | `Report`, локальне сховище |
 | `Users` | Користувачі, ролі, активність | `User` |
 | `Support` | Тікети, пріоритети, вкладення | `SupportTicket`, `SupportAttachment` |
 | `Profile / Settings` | Персональні параметри користувача | `User.profileData`, `User.settingsData` |
@@ -44,59 +45,65 @@
 
 ```mermaid
 flowchart TB
-  subgraph C["Клієнтський контур"]
-    UI["Next.js UI (App Router)"]
-    MW["Middleware<br/>VPN allowlist + session guard"]
-    UI --> MW
+  subgraph C["Клієнт"]
+    LAP["Ноутбук / Браузер"]
+    OVPNC["OpenVPN Connect"]
+    LAP --> OVPNC
   end
 
-  subgraph S["Серверний контур"]
-    API["API Routes (app/api/*)"]
-    AUTH["Auth + Session (cookies, token)"]
-    DOMAIN["Domain services (lib/*)"]
+  subgraph NET["Транспорт"]
+    INET["Інтернет"]
+  end
+
+  subgraph AWS["AWS VPS"]
+    SG["Security Group\n(відкритий лише VPN порт)"]
+    OVPNS["OpenVPN Server"]
+    PM2["PM2"]
+    NEXT["Next.js"]
+    MW["Middleware\nVPN_ALLOWLIST + session"]
     PRISMA["Prisma ORM"]
-    MW --> API
-    API --> AUTH
-    API --> DOMAIN
-    DOMAIN --> PRISMA
-  end
-
-  subgraph D["Дані та інтеграції"]
-    PG["Supabase PostgreSQL"]
-    ST["Supabase Storage"]
-    EXT["Weather / Rates providers"]
+    PG["PostgreSQL (localhost)"]
+    OVPNS --> PM2
+    PM2 --> NEXT
+    NEXT --> MW
+    NEXT --> PRISMA
     PRISMA --> PG
-    API --> ST
-    API --> EXT
   end
 
-  PG --> NOTIF["Notifications / Presence / History"]
-  NOTIF --> UI
+  OVPNC --> INET --> SG --> OVPNS
 ```
 
-## Потік завантаження звіту
+## Шлях запиту: 5 етапів
 
-```mermaid
-sequenceDiagram
-  participant U as Користувач
-  participant FE as Reports UI
-  participant API as POST /api/reports/upload
-  participant AUTH as Session check
-  participant ST as Supabase Storage
-  participant DB as PostgreSQL (Prisma)
-  participant N as Notifications
+### Етап 1. Ініціація (мій ноутбук)
 
-  U->>FE: Обирає PDF/XLSX + метадані
-  FE->>API: multipart/form-data
-  API->>AUTH: Перевірка сесії
-  AUTH-->>API: userId/role
-  API->>ST: Upload файлу в bucket
-  ST-->>API: storage path
-  API->>DB: create Report + parsed data для XLSX
-  DB-->>API: report id
-  API->>N: create notification
-  API-->>FE: 201 Created
-```
+Я відкриваю браузер і йду на внутрішню адресу сервера. Це адреса з приватної AWS‑мережі, вона не існує в звичайному інтернеті. OpenVPN Connect бере HTTP‑запит і шифрує його, після чого відправляє на публічний IP сервера через VPN‑порт.
+
+### Етап 2. Прохідна (AWS)
+
+Security Group пропускає тільки VPN‑трафік. OpenVPN Server розшифровує пакет і бачить оригінальний запит до `localhost:3000`.
+
+### Етап 3. Веб‑додаток (Next.js + PM2)
+
+PM2 тримає сайт активним. Next.js приймає запит, перевіряє сесію і `VPN_ALLOWLIST`. Якщо все ок — рендерить сторінку.
+
+### Етап 4. Дані (Prisma + PostgreSQL)
+
+Prisma переводить запит з TypeScript у SQL. PostgreSQL працює тільки на `localhost` і не відкритий назовні. Дані читаються з диску сервера і повертаються назад у застосунок.
+
+### Етап 5. Відповідь
+
+Next.js формує HTML, OpenVPN шифрує відповідь, і на моєму ноутбуці зʼявляється сторінка.
+
+## Ешелонований захист
+
+Я використовую defense‑in‑depth на трьох рівнях:
+
+1. Мережевий рівень: порт сайту і БД не доступні з інтернету, тільки через VPN.
+2. Транспортний рівень: весь трафік зашифрований.
+3. Прикладний рівень: middleware перевіряє сесію та VPN‑allowlist.
+
+База локальна, не залежить від зовнішніх хмар, дані повністю під контролем компанії.
 
 ## Карта сторінок
 
@@ -118,10 +125,12 @@ flowchart LR
 |---|---|
 | UI | `Next.js 15`, `React 19`, `Tailwind CSS`, `MapLibre`, `Recharts` |
 | Backend | `Next.js Route Handlers`, `Prisma` |
-| Data | `Supabase PostgreSQL`, `Supabase Storage` |
+| Data | `PostgreSQL (local)`, файлове сховище на сервері |
+| Process | `PM2` |
+| Network | `OpenVPN` |
 | QA | `Vitest`, `Playwright` |
 
-## Мій локальний запуск
+## Локальний запуск
 
 Я використовую такий цикл:
 
@@ -135,14 +144,14 @@ pnpm install
 cp .env.example .env
 ```
 
-3. Заповнюю ключові змінні: `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`.
+3. Заповнюю ключові змінні: `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `VPN_ALLOWLIST`.
 
 4. Синхронізую схему з БД.
 ```bash
 pnpm db:push
 ```
 
-5. За потреби заливаю демо-дані.
+5. За потреби заливаю демо‑дані.
 ```bash
 pnpm db:seed
 ```
@@ -152,36 +161,25 @@ pnpm db:seed
 pnpm dev
 ```
 
-## Мій процес міграцій і деплою
+## Деплой на сервер (PM2)
 
-1. Локально вношу зміни в `prisma/schema.prisma`.
-2. Створюю міграцію через `prisma migrate dev`.
-3. Комічу `prisma/migrations/*` у GitHub разом із кодом.
-4. На сервері виконую `prisma migrate deploy` перед запуском.
-
-Серверний цикл:
+Мій продакшен‑цикл виглядає так:
 
 ```bash
 pnpm install --frozen-lockfile
 pnpm prisma migrate deploy
 pnpm build
-pnpm start
+pm2 start npm --name agroplus -- start -- -p 3000 -H 0.0.0.0
+pm2 save
 ```
 
-### IPv4 / IPv6 у моєму сценарії
+## OpenVPN і доступ
 
-- `DIRECT_URL` інколи доступний лише по IPv6.
-- Якщо сервер IPv4-only, міграції я запускаю з вузла, де є IPv6.
-- Runtime сервера тримаю на `DATABASE_URL` (pooler), якщо він доступний із сервера.
+- VPN працює як єдиний канал доступу до сайту.
+- Вхідний трафік у Security Group відкритий лише для VPN‑порту.
+- База слухає тільки `localhost` і недоступна з інтернету.
 
-## Доступ через OpenVPN
-
-У мережевому контурі я використовую два рівні захисту:
-
-- інфраструктурний: `OpenVPN + firewall/security group`;
-- прикладний: `VPN_ALLOWLIST` у middleware.
-
-Приклад формату:
+Приклад `VPN_ALLOWLIST`:
 
 ```env
 VPN_ALLOWLIST="10.8.0.0/24,203.0.113.10/32"
@@ -243,11 +241,11 @@ flowchart LR
 ├── prisma/
 │   ├── schema.prisma            # модель даних
 │   └── seed.ts                  # стартові дані
-├── scripts/                     # технічні скрипти (наприклад, генерація звітів)
+├── scripts/                     # технічні скрипти
 ├── tests/
 │   ├── unit/                    # unit тести
 │   └── e2e/                     # end-to-end тести
-├── uploads/                     # локальні завантаження/тестові файли
+├── uploads/                     # локальні завантаження/файли звітів
 ├── middleware.ts                # контроль доступу (session + VPN allowlist)
 └── README.md                    # документація проєкту
 ```
@@ -258,11 +256,11 @@ flowchart LR
 |---|---|
 | Нова сторінка | `app/<feature>/page.tsx` |
 | Новий API endpoint | `app/api/<feature>/route.ts` |
-| Нова бізнес-логіка | `lib/<feature>.ts` |
-| Нова таблиця / зв’язок | `prisma/schema.prisma` + міграція |
-| Нові UI-примітиви | `components/ui/*` |
+| Нова бізнес‑логіка | `lib/<feature>.ts` |
+| Нова таблиця / звʼязок | `prisma/schema.prisma` + міграція |
+| Нові UI‑примітиви | `components/ui/*` |
 | Новий e2e сценарій | `tests/e2e/*` |
-| Новий unit-тест | `tests/unit/*` |
+| Новий unit‑тест | `tests/unit/*` |
 
 ## Скрипти
 
@@ -272,18 +270,14 @@ flowchart LR
 - `pnpm lint` - перевірка ESLint
 - `pnpm prisma` - Prisma CLI
 - `pnpm db:push` - синхронізація схеми без міграцій
-- `pnpm db:seed` - початкові демо-дані
-- `pnpm test:unit` - unit-тести
-- `pnpm test:e2e` - e2e-тести
+- `pnpm db:seed` - початкові демо‑дані
+- `pnpm test:unit` - unit‑тести
+- `pnpm test:e2e` - e2e‑тести
 - `pnpm test` - повний прогін тестів
 
 ## Безпека
 
 - `.env` не потрапляє в Git.
-- `SUPABASE_SERVICE_ROLE_KEY` використовую тільки на серверній стороні.
-- Після підозри на витік одразу роблю ротацію: `DB password`, `service role key`, `AUTH_SECRET`.
-
-## Демо-доступ (локально)
-
-- Логін: `admin`
-- Пароль: `admin123`
+- База даних ізольована на `localhost`.
+- VPN — єдиний публічний вхід у систему.
+- Middleware перевіряє сесії та дозволені IP.
