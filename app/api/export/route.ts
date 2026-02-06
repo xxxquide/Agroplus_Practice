@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
-import type { Field, InventoryItem, Machinery, Report } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/session";
+
+type FieldRow = Awaited<ReturnType<typeof prisma.field.findMany>>[number];
+type InventoryRow = Awaited<ReturnType<typeof prisma.inventoryItem.findMany>>[number];
+type MachineryRow = Awaited<ReturnType<typeof prisma.machinery.findMany>>[number];
+type ReportRow = Awaited<ReturnType<typeof prisma.report.findMany>>[number];
 
 export async function GET() {
   const user = await requireUser();
@@ -21,7 +25,7 @@ export async function GET() {
   XLSX.utils.book_append_sheet(
     workbook,
     XLSX.utils.json_to_sheet(
-      fields.map((item: Field) => ({
+      fields.map((item: FieldRow) => ({
         code: item.code,
         name: item.name,
         region: item.region,
@@ -42,7 +46,7 @@ export async function GET() {
   XLSX.utils.book_append_sheet(
     workbook,
     XLSX.utils.json_to_sheet(
-      inventory.map((item: InventoryItem) => ({
+      inventory.map((item: InventoryRow) => ({
         name: item.name,
         category: item.category,
         quantity: item.quantity,
@@ -59,7 +63,7 @@ export async function GET() {
   XLSX.utils.book_append_sheet(
     workbook,
     XLSX.utils.json_to_sheet(
-      machinery.map((item: Machinery) => ({
+      machinery.map((item: MachineryRow) => ({
         name: item.name,
         type: item.type,
         status: item.status,
@@ -72,7 +76,7 @@ export async function GET() {
   XLSX.utils.book_append_sheet(
     workbook,
     XLSX.utils.json_to_sheet(
-      reports.map((item: Report) => ({
+      reports.map((item: ReportRow) => ({
         fileNameOriginal: item.fileNameOriginal,
         category: item.category,
         tags: item.tags,
