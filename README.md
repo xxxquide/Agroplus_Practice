@@ -4,6 +4,7 @@
 
 ## Зміст
 
+- [Паспорт системи](#паспорт-системи)
 - [Суть проєкту](#суть-проєкту)
 - [Модулі системи](#модулі-системи)
 - [Архітектура](#архітектура)
@@ -18,6 +19,21 @@
 - [Структура проєкту](#структура-проєкту)
 - [Скрипти](#скрипти)
 - [Безпека](#безпека)
+
+## Паспорт системи
+
+| Параметр | Значення |
+|---|---|
+| Доступ | Тільки через OpenVPN |
+| VPN протокол | OpenVPN (`UDP 1194`) |
+| Порт застосунку | `3000` (закритий для інтернету) |
+| Процес‑менеджер | `PM2` |
+| Рантайм | `Node.js 20` |
+| Backend | `Next.js Route Handlers` |
+| ORM | `Prisma` |
+| База | `PostgreSQL` тільки `localhost` |
+| Файли | локальне сховище на сервері (`uploads`) |
+| Репозиторій | GitHub (pull + build + restart) |
 
 ## Суть проєкту
 
@@ -155,6 +171,7 @@ flowchart LR
 | UI | `Next.js 15`, `React 19`, `Tailwind CSS`, `MapLibre`, `Recharts` |
 | Backend | `Next.js Route Handlers`, `Prisma` |
 | Data | `PostgreSQL (local)`, файлове сховище на сервері |
+| Runtime | `Node.js 20` |
 | Process | `PM2` |
 | Network | `OpenVPN` |
 | QA | `Vitest`, `Playwright` |
