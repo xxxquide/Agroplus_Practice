@@ -67,33 +67,69 @@
 ## Архітектура
 
 ```mermaid
-flowchart TB
-  subgraph C["Клієнт"]
-    LAP["Ноутбук / Браузер"]
-    OVPNC["OpenVPN Connect"]
-    LAP --> OVPNC
-  end
+graph TB
+    classDef client fill:#1976d2,stroke:#0d47a1,stroke-width:3px,color:#ffffff
+    classDef vpn fill:#388e3c,stroke:#1b5e20,stroke-width:3px,color:#ffffff
+    classDef server fill:#f57c00,stroke:#e65100,stroke-width:3px,color:#ffffff
+    classDef db fill:#7b1fa2,stroke:#4a148c,stroke-width:3px,stroke-dasharray:5 5,color:#ffffff
+    classDef blocked fill:#d32f2f,stroke:#b71c1c,stroke-width:3px,stroke-dasharray:5 5,color:#ffffff
 
-  subgraph NET["Транспорт"]
-    INET["Інтернет"]
-  end
+    subgraph CLIENT_ZONE["💻 Клієнтська зона"]
+        Browser["🌐 Веб-браузер<br/>URL: http://agro.corp:3000"]
+        OS_Net["⚙️ OS Network Stack<br/>Hosts: 172.31.x.x"]
+        VPN_Client["🛡️ OpenVPN Connect<br/>Interface: tun0"]
+        
+        Browser -->|"1. HTTP Request"| OS_Net
+        OS_Net -->|"2. Маршрутизація"| VPN_Client
+    end
 
-  subgraph AWS["AWS VPS"]
-    SG["Security Group\n(відкритий лише VPN порт)"]
-    OVPNS["OpenVPN Server"]
-    PM2["PM2"]
-    NEXT["Next.js"]
-    MW["Middleware\nVPN_ALLOWLIST + session"]
-    PRISMA["Prisma ORM"]
-    PG["PostgreSQL (localhost)"]
-    OVPNS --> PM2
-    PM2 --> NEXT
-    NEXT --> MW
-    NEXT --> PRISMA
-    PRISMA --> PG
-  end
+    subgraph INTERNET["🌐 Інтернет"]
+        Tunnel["🔒 Encrypted Tunnel<br/>UDP/TCP"]
+        Hacker["👤 Hacker / Scanner"]
+    end
 
-  OVPNC --> INET --> SG --> OVPNS
+    subgraph AWS_CLOUD["☁️ AWS Cloud"]
+        subgraph FIREWALL["🛡️ AWS Security Group"]
+            Port_VPN["✅ Port 1194/943<br/>OpenVPN"]
+            Port_App["❌ Port 3000<br/>BLOCKED"]
+            Port_DB["❌ Port 5432<br/>BLOCKED"]
+        end
+        
+        subgraph SERVER["🔒 Внутрішній сервер"]
+            VPN_Server["🖥️ OpenVPN Server<br/>Gateway"]
+            
+            subgraph APP["Application Stack"]
+                PM2["⚡ PM2 Manager"]
+                NextJS["▲ Next.js<br/>Port: 3000"]
+                Middleware["🔐 VPN Guard"]
+            end
+            
+            subgraph DATA["Data Layer"]
+                Prisma["📦 Prisma ORM"]
+                Postgres[("🗄️ PostgreSQL<br/>127.0.0.1:5432")]
+                FileSystem["📁 /uploads"]
+            end
+        end
+    end
+
+    VPN_Client ==>|"3. Encrypted"| Tunnel
+    Tunnel ==>|"4. VPN Packet"| Port_VPN
+    Port_VPN --> VPN_Server
+    VPN_Server -->|"5. Decrypted"| PM2
+    PM2 --> NextJS
+    NextJS -->|"6. Check"| Middleware
+    Middleware -->|"7. Logic"| Prisma
+    Prisma <-->|"8. SQL"| Postgres
+    NextJS <-->|"9. Files"| FileSystem
+
+    Hacker -.->|"❌ Attack"| Port_App
+    Hacker -.->|"❌ Brute Force"| Port_DB
+
+    class Browser,OS_Net,VPN_Client client
+    class VPN_Server,Tunnel vpn
+    class PM2,NextJS,Middleware,Prisma,FileSystem server
+    class Postgres db
+    class Hacker,Port_App,Port_DB blocked
 ```
 
 ## Шлях запиту: 5 етапів
