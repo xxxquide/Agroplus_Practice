@@ -65,7 +65,7 @@
 | `Profile / Settings` | Персональні параметри користувача | `User.profileData`, `User.settingsData` |
 
 ## Архітектура
-
+> <img src="icons/diagram.jpeg" />
 ```mermaid
 graph TB
     classDef client fill:#1976d2,stroke:#0d47a1,stroke-width:3px,color:#ffffff
