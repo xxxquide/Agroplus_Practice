@@ -357,7 +357,6 @@ export function DashboardClient({
             aria-label="Профіль"
           >
             {avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={avatar} alt="Avatar" className="h-full w-full object-cover" />
             ) : (
               "АД"
